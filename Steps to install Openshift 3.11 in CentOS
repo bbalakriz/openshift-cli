@@ -1,0 +1,174 @@
+https://www.youtube.com/watch?v=f8ukbpU9osg
+https://youtu.be/I7co5-qJhuM
+https://youtu.be/O-v6QXF9GM0
+
+
+1. Do this on the plain CentOs instance
+
+https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys--2
+
+Do sudo -i
+
+[root@instance-1 ~]$ ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/root/.ssh/id_rsa): 
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /home/root/.ssh/id_rsa.
+Your public key has been saved in /home/root/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:aVsumufzJiCdeicnU+8L+RTIFjqpQ86Cio1KC1rzWeQ root@instance-1
+The key's randomart image is:
++---[RSA 2048]----+
+|                 |
+|                 |
+|        .        |
+|       + +       |
+|    ..=.S o      |
+| . +.+++.= .     |
+|o.+ =oEo=.o      |
+|*+.+.+=o*=o      |
+|B.. o.oO.*=.     |
++----[SHA256]-----+
+[root@instance-1 ~]$ 
+
+[root@instance-1 ~]$ sudo -i
+[root@instance-1 ~]# passwd
+Changing password for user root.
+New password: 
+Retype new password: 
+passwd: all authentication tokens updated successfully.
+[root@instance-1 ~]# 
+[root@instance-1 ~]# 
+[root@instance-1 ~]# exit
+logout
+
+Set PermitRootLogin and PasswordAuthentication to yes 
+========================================================
+[root@instance-1 ~]$ sudo vi /etc/ssh/sshd_config 
+[root@instance-1 ~]$ 
+[root@instance-1 ~]$ sudo systemctl reload sshd.service
+
+=========
+Ensure that the subnet (ifconfig) of the VM starts with anything other than 10.128.*. Best is to use us-east zone of GCP which provides 10.142.*
+=========
+
+Do ssh-copy-id
+================
+[root@instance-1 ~]$ 
+[root@instance-1 ~]$ ssh-copy-id root@10.142.0.2
+error fetching identities for protocol 1: agent refused operation
+error fetching identities for protocol 1: agent refused operation
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+error fetching identities for protocol 1: agent refused operation
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+root@10.142.0.2's password: 
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'root@10.142.0.2'"
+and check to make sure that only the key(s) you wanted were added.
+
+[root@instance-1 ~]$ 
+[root@instance-1 ~]$ ssh 'root@10.142.0.2'
+[root@instance-1 ~]# exit
+logout
+Connection to 10.142.0.2 closed.
+
+2. Set password for the root user of the CentOs
+
+3. Download and set up OC client
+
+[root@instance-1 ~]$ sudo yum install -y wget
+
+[root@instance-1 ~]$ wget https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz
+
+[root@instance-1 ~]$ mv openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz oc-client.tar.gz
+[root@instance-1 ~]$ tar xfz oc-client.tar.gz 
+[root@instance-1 ~]$ mv openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit/ oc-client
+
+[root@instance-1 ]$ vi ~/.bashrc
+add the line 
+export PATH=$PATH:~/oc-client
+
+[root@instance-1 ]$ source ~/.bashrc 
+
+[root@instance-1 oc-client]$ sudo yum install -y git
+
+
+4. Ensure ssh root@local.ip works so that ansible will work
+
+
+[root@instance-1 oc-client]$ git clone https://github.com/okd-community-install/installcentos.git
+cd installcentos
+./install-openshift.sh
+
+Accept all defaults and choose NO (2) for certs
+
+Enable firewall rule in GCP VPC network like this. 
+
+bala-ocp-3-11
+Ingress
+Apply to all	
+IP ranges: 0.0.0.0/0
+all
+Allow
+1000
+default
+
+oc login -u root -p password https://console.35.231.20.159.nip.io:8443
+--oc login -u root -p password https://console.34.73.83.30.nip.io:8443/
+
+Do the following steps to ensure that docker can connect to redhat registry to pull required images
+====================================================================================================
+$ sudo -i 
+$ cd /tmp 
+$ wget http://mirror.centos.org/centos/7/os/x86_64/Packages/python-rhsm-certificates-1.19.10-1.el7_4.x86_64.rpm
+$ mkdir -p /etc/rhsm/ca/
+$ cd /etc/rhsm/ca/
+$ touch redhat-uep.pem
+$ cd /tmp 
+$ rpm2cpio python-rhsm-certificates-1.19.10-1.el7_4.x86_64.rpm | cpio -iv --to-stdout ./etc/rhsm/ca/redhat-uep.pem | tee /etc/rhsm/ca/redhat-uep.pem 
+
+
+
+OCP - Web Console:
+===================
+https://console.34.66.58.103.nip.io:8443/console/
+https://console.35.231.20.159.nip.io:8443
+
+Login to OCP:
+==============
+ssh -i ~/.ssh/id_rsa bbalasub@34.66.58.103
+
+Adding a new user to OCP:
+==========================
+htpasswd -b /etc/origin/master/htpasswd bala P@ssw0rd
+oc login -u root -p password
+
+Eclipse che:
+============
+
+che-eclipse-che.apps.35.196.173.255.nip.io
+http://che-eclipse-che.apps.35.196.173.255.nip.io/dashboard/#/create-workspace
+bbalasub/Start@123
+balakriz/Start@123
+admin/Start@123
+kris/Start@123
+
+
+crc console:
+============
+
+[bbalasub@bbalasub crc-13]$ ./crc console --credentials
+To login as a regular user, run 'oc login -u developer -p developer https://api.crc.testing:6443'.
+To login as an admin, run 'oc login -u kubeadmin -p mhk2X-Y8ozE-9icYb-uLCdV https://api.crc.testing:6443'
+INFO         
+
+GCP CRC COnsole:
+================
+
+INFO To access the cluster, first set up your environment by following 'crc oc-env' instructions 
+INFO Then you can access it by running 'oc login -u developer -p developer https://api.crc.testing:6443' 
+INFO To login as an admin, run 'oc login -u kubeadmin -p 7z6T5-qmTth-oxaoD-p3xQF https://api.crc.testing:6443'                                      
+INFO You can now run 'crc console' and use these credentials to access the OpenShift web console 
