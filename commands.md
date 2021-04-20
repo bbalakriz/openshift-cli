@@ -11,7 +11,7 @@ oc create configmap bc-app-users-cfgmap --from-file=/home/bbalasub/Desktop/appli
 ```sh
 oc set volume dc/rhdm-kieserver-kieserver --add --name=bc-app-users-vol --mount-path /opt/eap/standalone/configuration/application-users.properties --sub-path application-users.properties --source='{"configMap":{"name":"bc-app-users-cfgmap","items":[{"key":"application-users.properties","path":"application-users.properties"}]}}'
 ```
-**3. Adding a init container to a container
+**3. Adding a init container to a depoloyment config.**
 
 ```
 spec:
